@@ -2,18 +2,17 @@
 # -*- encoding: utf-8 -*-
 
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision
 
 from .resnet import Resnet18
+
 # from modules.bn import InPlaceABNSync as BatchNorm2d
 
-import numpy as np
-
-seg_mean = torch.from_numpy(np.array([[0.485, 0.456, 0.406]])).float().cuda().reshape(1,3,1,1)
-seg_std = torch.from_numpy(np.array([[0.229, 0.224, 0.225]])).float().cuda().reshape(1,3,1,1)
+seg_mean = torch.from_numpy(np.array([[0.485, 0.456, 0.406]])).float().cuda().reshape(1, 3, 1, 1)
+seg_std = torch.from_numpy(np.array([[0.229, 0.224, 0.225]])).float().cuda().reshape(1, 3, 1, 1)
 seg_criterion = nn.CrossEntropyLoss()
 
 
@@ -21,11 +20,11 @@ class ConvBNReLU(nn.Module):
     def __init__(self, in_chan, out_chan, ks=3, stride=1, padding=1, *args, **kwargs):
         super(ConvBNReLU, self).__init__()
         self.conv = nn.Conv2d(in_chan,
-                out_chan,
-                kernel_size = ks,
-                stride = stride,
-                padding = padding,
-                bias = False)
+                              out_chan,
+                              kernel_size=ks,
+                              stride=stride,
+                              padding=padding,
+                              bias=False)
         self.bn = nn.BatchNorm2d(out_chan)
         self.init_weight()
 
@@ -39,6 +38,7 @@ class ConvBNReLU(nn.Module):
             if isinstance(ly, nn.Conv2d):
                 nn.init.kaiming_normal_(ly.weight, a=1)
                 if not ly.bias is None: nn.init.constant_(ly.bias, 0)
+
 
 class BiSeNetOutput(nn.Module):
     def __init__(self, in_chan, mid_chan, n_classes, *args, **kwargs):
@@ -74,7 +74,7 @@ class AttentionRefinementModule(nn.Module):
     def __init__(self, in_chan, out_chan, *args, **kwargs):
         super(AttentionRefinementModule, self).__init__()
         self.conv = ConvBNReLU(in_chan, out_chan, ks=3, stride=1, padding=1)
-        self.conv_atten = nn.Conv2d(out_chan, out_chan, kernel_size= 1, bias=False)
+        self.conv_atten = nn.Conv2d(out_chan, out_chan, kernel_size=1, bias=False)
         self.bn_atten = nn.BatchNorm2d(out_chan)
         self.sigmoid_atten = nn.Sigmoid()
         self.init_weight()
@@ -188,17 +188,17 @@ class FeatureFusionModule(nn.Module):
         super(FeatureFusionModule, self).__init__()
         self.convblk = ConvBNReLU(in_chan, out_chan, ks=1, stride=1, padding=0)
         self.conv1 = nn.Conv2d(out_chan,
-                out_chan//4,
-                kernel_size = 1,
-                stride = 1,
-                padding = 0,
-                bias = False)
-        self.conv2 = nn.Conv2d(out_chan//4,
-                out_chan,
-                kernel_size = 1,
-                stride = 1,
-                padding = 0,
-                bias = False)
+                               out_chan // 4,
+                               kernel_size=1,
+                               stride=1,
+                               padding=0,
+                               bias=False)
+        self.conv2 = nn.Conv2d(out_chan // 4,
+                               out_chan,
+                               kernel_size=1,
+                               stride=1,
+                               padding=0,
+                               bias=False)
         self.relu = nn.ReLU(inplace=True)
         self.sigmoid = nn.Sigmoid()
         self.init_weight()

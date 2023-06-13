@@ -54,7 +54,7 @@ class BicubicDownSample(nn.Module):
         # apply mirror padding
         if nhwc:
             x = torch.transpose(torch.transpose(
-                x, 2, 3), 1, 2)   # NHWC to NCHW
+                x, 2, 3), 1, 2)  # NHWC to NCHW
 
         # downscaling performed by 1-d convolution
         x = F.pad(x, (0, 0, pad_top, pad_bottom), self.padding)

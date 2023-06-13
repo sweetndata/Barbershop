@@ -1,25 +1,23 @@
-import torch
-from torch import nn
-from models.Net import Net
-import numpy as np
 import os
-from utils.bicubic import BicubicDownSample
-from tqdm import tqdm
-import PIL
+
+import numpy as np
+import torch
+import torch.nn.functional as F
 import torchvision
+from torch import nn
+from tqdm import tqdm
+
+from losses.blend_loss import BlendLossBuilder
+from models.Net import Net
 from models.face_parsing.model import BiSeNet, seg_mean, seg_std
 from models.optimizer.ClampOptimizer import ClampOptimizer
-from losses.blend_loss import BlendLossBuilder
-import torch.nn.functional as F
-import cv2
-from utils.data_utils import load_FS_latent
+from utils.bicubic import BicubicDownSample
 from utils.data_utils import cuda_unsqueeze
+from utils.data_utils import load_FS_latent
 from utils.image_utils import load_image, dilate_erosion_mask_path, dilate_erosion_mask_tensor
 from utils.model_utils import download_weight
 
 toPIL = torchvision.transforms.ToPILImage()
-
-
 
 
 class Blending(nn.Module):
@@ -35,8 +33,6 @@ class Blending(nn.Module):
         self.load_segmentation_network()
         self.load_downsampling()
         self.setup_blend_loss_builder()
-
-
 
     def load_downsampling(self):
 
@@ -54,7 +50,6 @@ class Blending(nn.Module):
             param.requires_grad = False
         self.seg.eval()
 
-
     def setup_blend_optimizer(self):
 
         interpolation_latent = torch.zeros((18, 512), requires_grad=True, device=self.opts.device)
@@ -65,7 +60,6 @@ class Blending(nn.Module):
 
     def setup_blend_loss_builder(self):
         self.loss_builder = BlendLossBuilder(self.opts)
-
 
     def blend_images(self, img_path1, img_path2, img_path3, sign='realistic'):
 
@@ -84,13 +78,13 @@ class Blending(nn.Module):
 
         opt_blend, interpolation_latent = self.setup_blend_optimizer()
         latent_1, latent_F_mixed = load_FS_latent(os.path.join(output_dir, 'Align_{}'.format(sign),
-                                            '{}_{}.npz'.format(im_name_1, im_name_3)),device)
+                                                               '{}_{}.npz'.format(im_name_1, im_name_3)), device)
         latent_3, _ = load_FS_latent(os.path.join(output_dir, 'FS',
-                                            '{}.npz'.format(im_name_3)), device)
+                                                  '{}.npz'.format(im_name_3)), device)
 
         with torch.no_grad():
             I_X, _ = self.net.generator([latent_1], input_is_latent=True, return_latents=False, start_layer=4,
-                               end_layer=8, layer_in=latent_F_mixed)
+                                        end_layer=8, layer_in=latent_F_mixed)
             I_X_0_1 = (I_X + 1) / 2
             IM = (self.downsample(I_X_0_1) - seg_mean) / seg_std
             down_seg, _, _ = self.seg(IM)
@@ -100,16 +94,14 @@ class Blending(nn.Module):
             HM_XD, _ = cuda_unsqueeze(dilate_erosion_mask_tensor(HM_X), device)
             target_mask = (1 - HM_1D) * (1 - HM_3D) * (1 - HM_XD)
 
-
         pbar = tqdm(range(self.opts.blend_steps), desc='Blend', leave=False)
         for step in pbar:
-
             opt_blend.zero_grad()
 
             latent_mixed = latent_1 + interpolation_latent.unsqueeze(0) * (latent_3 - latent_1)
 
             I_G, _ = self.net.generator([latent_mixed], input_is_latent=True, return_latents=False, start_layer=4,
-                               end_layer=8, layer_in=latent_F_mixed)
+                                        end_layer=8, layer_in=latent_F_mixed)
             I_G_0_1 = (I_G + 1) / 2
 
             im_dict = {
@@ -133,11 +125,11 @@ class Blending(nn.Module):
         _, latent_F_mixed = load_FS_latent(os.path.join(output_dir, 'Align_{}'.format(sign),
                                                         '{}_{}.npz'.format(im_name_1, im_name_2)), device)
         I_G, _ = self.net.generator([latent_mixed], input_is_latent=True, return_latents=False, start_layer=4,
-                           end_layer=8, layer_in=latent_F_mixed)
+                                    end_layer=8, layer_in=latent_F_mixed)
 
         self.save_blend_results(im_name_1, im_name_2, im_name_3, sign, I_G, latent_mixed, latent_F_mixed)
 
-    def save_blend_results(self, im_name_1, im_name_2, im_name_3, sign,  gen_im, latent_in, latent_F):
+    def save_blend_results(self, im_name_1, im_name_2, im_name_3, sign, gen_im, latent_in, latent_F):
         save_im = toPIL(((gen_im[0] + 1) / 2).detach().cpu().clamp(0, 1))
 
         save_dir = os.path.join(self.opts.output_dir, 'Blend_{}'.format(sign))
@@ -145,10 +137,9 @@ class Blending(nn.Module):
 
         latent_path = os.path.join(save_dir, '{}_{}_{}.npz'.format(im_name_1, im_name_2, im_name_3))
         image_path = os.path.join(save_dir, '{}_{}_{}.png'.format(im_name_1, im_name_2, im_name_3))
-        output_image_path = os.path.join(self.opts.output_dir, '{}_{}_{}_{}.png'.format(im_name_1, im_name_2, im_name_3, sign))
+        output_image_path = os.path.join(self.opts.output_dir,
+                                         '{}_{}_{}_{}.png'.format(im_name_1, im_name_2, im_name_3, sign))
 
         save_im.save(image_path)
         save_im.save(output_image_path)
         np.savez(latent_path, latent_in=latent_in.detach().cpu().numpy(), latent_F=latent_F.detach().cpu().numpy())
-
-

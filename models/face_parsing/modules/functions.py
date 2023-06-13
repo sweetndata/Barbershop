@@ -1,8 +1,8 @@
 from os import path
-import torch 
-import torch.distributed as dist
+
+import torch
 import torch.autograd as autograd
-import torch.cuda.comm as comm
+import torch.distributed as dist
 from torch.autograd.function import once_differentiable
 from torch.utils.cpp_extension import load
 
@@ -136,6 +136,7 @@ class InPlaceABN(autograd.Function):
 
         return dx, dweight, dbias, None, None, None, None, None, None, None
 
+
 class InPlaceABNSync(autograd.Function):
     @classmethod
     def forward(cls, ctx, x, weight, bias, running_mean, running_var,
@@ -151,8 +152,8 @@ class InPlaceABNSync(autograd.Function):
         # Prepare inputs
         ctx.world_size = dist.get_world_size() if dist.is_initialized() else 1
 
-        #count = _count_samples(x)
-        batch_size = x.new_tensor([x.shape[0]],dtype=torch.long)
+        # count = _count_samples(x)
+        batch_size = x.new_tensor([x.shape[0]], dtype=torch.long)
 
         x = x.contiguous()
         weight = weight.contiguous() if ctx.affine else x.new_empty(0)
@@ -160,14 +161,14 @@ class InPlaceABNSync(autograd.Function):
 
         if ctx.training:
             mean, var = _backend.mean_var(x)
-            if ctx.world_size>1:
+            if ctx.world_size > 1:
                 # get global batch size
                 if equal_batches:
                     batch_size *= ctx.world_size
                 else:
                     dist.all_reduce(batch_size, dist.ReduceOp.SUM)
 
-                ctx.factor = x.shape[0]/float(batch_size.item())
+                ctx.factor = x.shape[0] / float(batch_size.item())
 
                 mean_all = mean.clone() * ctx.factor
                 dist.all_reduce(mean_all, dist.ReduceOp.SUM)
@@ -180,7 +181,7 @@ class InPlaceABNSync(autograd.Function):
 
             # Update running stats
             running_mean.mul_((1 - ctx.momentum)).add_(ctx.momentum * mean)
-            count = batch_size.item() * x.view(x.shape[0],x.shape[1],-1).shape[-1]
+            count = batch_size.item() * x.view(x.shape[0], x.shape[1], -1).shape[-1]
             running_var.mul_((1 - ctx.momentum)).add_(ctx.momentum * var * (float(count) / (count - 1)))
 
             # Mark in-place modified tensors
@@ -212,7 +213,7 @@ class InPlaceABNSync(autograd.Function):
             edz_local = edz.clone()
             eydz_local = eydz.clone()
 
-            if ctx.world_size>1:
+            if ctx.world_size > 1:
                 edz *= ctx.factor
                 dist.all_reduce(edz, dist.ReduceOp.SUM)
 
@@ -227,6 +228,7 @@ class InPlaceABNSync(autograd.Function):
         dbias = edz_local if ctx.affine else None
 
         return dx, dweight, dbias, None, None, None, None, None, None, None
+
 
 inplace_abn = InPlaceABN.apply
 inplace_abn_sync = InPlaceABNSync.apply

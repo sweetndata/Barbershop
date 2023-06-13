@@ -1,7 +1,6 @@
 import torch
+
 from losses import lpips
-import PIL
-import os
 
 
 class EmbeddingLossBuilder(torch.nn.Module):
@@ -19,20 +18,14 @@ class EmbeddingLossBuilder(torch.nn.Module):
         self.percept.eval()
         # self.percept = VGGLoss()
 
-
-
-
     def _loss_l2(self, gen_im, ref_im, **kwargs):
         return self.l2(gen_im, ref_im)
-
 
     def _loss_lpips(self, gen_im, ref_im, **kwargs):
 
         return self.percept(gen_im, ref_im).sum()
 
-
-
-    def forward(self, ref_im_H,ref_im_L, gen_im_H, gen_im_L):
+    def forward(self, ref_im_H, ref_im_L, gen_im_H, gen_im_L):
 
         loss = 0
         loss_fun_dict = {
@@ -53,5 +46,5 @@ class EmbeddingLossBuilder(torch.nn.Module):
                 }
             tmp_loss = loss_fun_dict[loss_type](**var_dict)
             losses[loss_type] = tmp_loss
-            loss += weight*tmp_loss
+            loss += weight * tmp_loss
         return loss, losses

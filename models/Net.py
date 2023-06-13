@@ -1,9 +1,12 @@
+import os
+
+import numpy as np
 import torch
 from torch import nn
+
 from models.stylegan2.model import Generator
-import numpy as np
-import os
 from utils.model_utils import download_weight
+
 
 class Net(nn.Module):
 
@@ -14,7 +17,6 @@ class Net(nn.Module):
         self.cal_layer_num()
         self.load_weights()
         self.load_PCA_model()
-
 
     def load_weights(self):
         if not os.path.exists(self.opts.ckpt):
@@ -33,7 +35,6 @@ class Net(nn.Module):
             param.requires_grad = False
         self.generator.eval()
 
-
     def build_PCA_model(self, PCA_path):
 
         with torch.no_grad():
@@ -51,7 +52,6 @@ class Net(nn.Module):
         X_comp, X_stdev, X_var_ratio = transformer.get_components()
         np.savez(PCA_path, X_mean=X_mean, X_comp=X_comp, X_stdev=X_stdev, X_var_ratio=X_var_ratio)
 
-
     def load_PCA_model(self):
         device = self.opts.device
 
@@ -64,8 +64,6 @@ class Net(nn.Module):
         self.X_mean = torch.from_numpy(PCA_model['X_mean']).float().to(device)
         self.X_comp = torch.from_numpy(PCA_model['X_comp']).float().to(device)
         self.X_stdev = torch.from_numpy(PCA_model['X_stdev']).float().to(device)
-
-
 
     # def make_noise(self):
     #     noises_single = self.generator.make_noise()
@@ -87,15 +85,11 @@ class Net(nn.Module):
 
         return
 
-
     def cal_p_norm_loss(self, latent_in):
         latent_p_norm = (torch.nn.LeakyReLU(negative_slope=5)(latent_in) - self.X_mean).bmm(
             self.X_comp.T.unsqueeze(0)) / self.X_stdev
         p_norm_loss = self.opts.p_norm_lambda * (latent_p_norm.pow(2).mean())
         return p_norm_loss
 
-
     def cal_l_F(self, latent_F, F_init):
         return self.opts.l_F_lambda * (latent_F - F_init).pow(2).mean()
-
-

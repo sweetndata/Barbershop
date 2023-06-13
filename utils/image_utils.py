@@ -1,20 +1,15 @@
 import PIL
-import torchvision
-import torch.nn.functional as F
-from PIL import Image
-import torch
-import torchvision
-from PIL import Image
-from utils.bicubic import BicubicDownSample
 import numpy as np
-from models.face_parsing.model import seg_mean, seg_std
-
-
-from torchvision.transforms import transforms
 import scipy
+import torch
+import torch.nn.functional as F
+import torchvision
+from PIL import Image
+from PIL import Image
+from torchvision.transforms import transforms
 
-
-
+from models.face_parsing.model import seg_mean, seg_std
+from utils.bicubic import BicubicDownSample
 
 
 def load_image(img_path, normalize=True, downsample=False):
@@ -27,14 +22,14 @@ def load_image(img_path, normalize=True, downsample=False):
     return img
 
 
-
 def dilate_erosion_mask_path(im_path, seg_net, dilate_erosion=5):
     # # Mask
     # mask = Image.open(mask_path).convert("RGB")
     # mask = mask.resize((256, 256), PIL.Image.NEAREST)
     # mask = transforms.ToTensor()(mask)  # [0, 1]
 
-    IM1 = (BicubicDownSample(factor=2)(torchvision.transforms.ToTensor()(Image.open(im_path))[:3].unsqueeze(0).cuda()).clamp(
+    IM1 = (BicubicDownSample(factor=2)(
+        torchvision.transforms.ToTensor()(Image.open(im_path))[:3].unsqueeze(0).cuda()).clamp(
         0, 1) - seg_mean) / seg_std
     down_seg1, _, _ = seg_net(IM1)
     mask = torch.argmax(down_seg1, dim=1).long().cpu().float()
@@ -51,6 +46,7 @@ def dilate_erosion_mask_path(im_path, seg_net, dilate_erosion=5):
     hair_mask_erode = np.expand_dims(hair_mask_erode, axis=0)
 
     return torch.from_numpy(hair_mask_dilate).float(), torch.from_numpy(hair_mask_erode).float()
+
 
 def dilate_erosion_mask_tensor(mask, dilate_erosion=5):
     hair_mask = mask.clone()

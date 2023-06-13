@@ -1,7 +1,7 @@
 import torch
-import PIL
-import os
+
 from losses import masked_lpips
+
 
 class BlendLossBuilder(torch.nn.Module):
     def __init__(self, opt):
@@ -24,8 +24,6 @@ class BlendLossBuilder(torch.nn.Module):
         )
         self.hair_percept.eval()
 
-
-
     def _loss_face_percept(self, gen_im, ref_im, mask, **kwargs):
 
         return self.face_percept(gen_im, ref_im, mask=mask)
@@ -33,7 +31,6 @@ class BlendLossBuilder(torch.nn.Module):
     def _loss_hair_percept(self, gen_im, ref_im, mask, **kwargs):
 
         return self.hair_percept(gen_im, ref_im, mask=mask)
-
 
     def forward(self, gen_im, im_1, im_3, mask_face, mask_hair):
 
@@ -58,5 +55,5 @@ class BlendLossBuilder(torch.nn.Module):
                 }
             tmp_loss = loss_fun_dict[loss_type](**var_dict)
             losses[loss_type] = tmp_loss
-            loss += weight*tmp_loss
+            loss += weight * tmp_loss
         return loss, losses

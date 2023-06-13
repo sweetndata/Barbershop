@@ -1,15 +1,17 @@
 # URL helpers, see https://github.com/NVlabs/stylegan
 # ------------------------------------------------------------------------------------------
 
-import requests
-import html
-import hashlib
 import glob
-import os
+import hashlib
+import html
 import io
-from typing import Any
+import os
 import re
 import uuid
+from typing import Any
+
+import requests
+
 
 def is_url(obj: Any) -> bool:
     """Determine whether the given object is a valid URL string."""
@@ -27,7 +29,8 @@ def is_url(obj: Any) -> bool:
     return True
 
 
-def open_url(url: str, cache_dir: str = None, num_attempts: int = 10, verbose: bool = True, return_path: bool = False) -> Any:
+def open_url(url: str, cache_dir: str = None, num_attempts: int = 10, verbose: bool = True,
+             return_path: bool = False) -> Any:
     """Download the given URL and return a binary-mode file object to access the data."""
     assert is_url(url)
     assert num_attempts >= 1
@@ -37,7 +40,7 @@ def open_url(url: str, cache_dir: str = None, num_attempts: int = 10, verbose: b
     if cache_dir is not None:
         cache_files = glob.glob(os.path.join(cache_dir, url_md5 + "_*"))
         if len(cache_files) == 1:
-            if(return_path):
+            if (return_path):
                 return cache_files[0]
             else:
                 return open(cache_files[0], "rb")
@@ -58,7 +61,8 @@ def open_url(url: str, cache_dir: str = None, num_attempts: int = 10, verbose: b
                     if len(res.content) < 8192:
                         content_str = res.content.decode("utf-8")
                         if "download_warning" in res.headers.get("Set-Cookie", ""):
-                            links = [html.unescape(link) for link in content_str.split('"') if "export=download" in link]
+                            links = [html.unescape(link) for link in content_str.split('"') if
+                                     "export=download" in link]
                             if len(links) == 1:
                                 url = requests.compat.urljoin(url, links[0])
                                 raise IOError("Google Drive virus checker nag")
@@ -87,8 +91,8 @@ def open_url(url: str, cache_dir: str = None, num_attempts: int = 10, verbose: b
         os.makedirs(cache_dir, exist_ok=True)
         with open(temp_file, "wb") as f:
             f.write(url_data)
-        os.replace(temp_file, cache_file) # atomic
-        if(return_path): return cache_file
+        os.replace(temp_file, cache_file)  # atomic
+        if (return_path): return cache_file
 
     # Return data as file object.
     return io.BytesIO(url_data)

@@ -3,6 +3,7 @@ Code adopted from pix2pixHD:
 https://github.com/NVIDIA/pix2pixHD/blob/master/data/image_folder.py
 """
 import os
+
 import numpy as np
 import torch
 
@@ -14,7 +15,6 @@ IMG_EXTENSIONS = [
 
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
-
 
 
 def make_dataset(dir):
@@ -29,7 +29,6 @@ def make_dataset(dir):
 
 
 def cuda_unsqueeze(li_variables=None, device='cuda'):
-
     if li_variables is None:
         return None
 
@@ -44,7 +43,6 @@ def cuda_unsqueeze(li_variables=None, device='cuda'):
 
 
 def convert_npy_code(latent):
-
     if latent.shape == (18, 512):
         latent = np.reshape(latent, (1, 18, 512))
 
@@ -53,11 +51,9 @@ def convert_npy_code(latent):
     return latent
 
 
-
 def load_FS_latent(latent_path, device):
     dict = np.load(latent_path)
     latent_in = torch.from_numpy(dict['latent_in']).to(device)
     latent_F = torch.from_numpy(dict['latent_F']).to(device)
 
     return latent_in, latent_F
-

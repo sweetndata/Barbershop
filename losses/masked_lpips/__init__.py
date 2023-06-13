@@ -3,23 +3,21 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-from skimage.metrics import structural_similarity
 import torch
-from torch.autograd import Variable
 
 from ..masked_lpips import dist_model
 
 
 class PerceptualLoss(torch.nn.Module):
     def __init__(
-        self,
-        model="net-lin",
-        net="alex",
-        vgg_blocks=[1, 2, 3, 4, 5],
-        colorspace="rgb",
-        spatial=False,
-        use_gpu=True,
-        gpu_ids=[0],
+            self,
+            model="net-lin",
+            net="alex",
+            vgg_blocks=[1, 2, 3, 4, 5],
+            colorspace="rgb",
+            spatial=False,
+            use_gpu=True,
+            gpu_ids=[0],
     ):  # VGG using our perceptually-learned weights (LPIPS metric)
         # def __init__(self, model='net', net='vgg', use_gpu=True): # "default" way of using VGG as a perceptual loss
         super(PerceptualLoss, self).__init__()

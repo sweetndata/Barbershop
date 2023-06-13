@@ -1,11 +1,11 @@
-import numpy as np
-import PIL
-import PIL.Image
-import scipy
-import scipy.ndimage
-import dlib
 from pathlib import Path
 
+import PIL
+import PIL.Image
+import dlib
+import numpy as np
+import scipy
+import scipy.ndimage
 
 """
 brief: face alignment with FFHQ method (https://github.com/NVlabs/ffhq-dataset)
@@ -23,7 +23,8 @@ requirements:
     # http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2
 """
 
-def get_landmark(filepath,predictor):
+
+def get_landmark(filepath, predictor):
     """get landmark with dlib
     :return: np.array shape=(68, 2)
     """
@@ -40,13 +41,13 @@ def get_landmark(filepath,predictor):
     return lms
 
 
-def align_face(filepath,predictor):
+def align_face(filepath, predictor):
     """
     :param filepath: str
     :return: list of PIL Images
     """
 
-    lms = get_landmark(filepath,predictor)
+    lms = get_landmark(filepath, predictor)
     imgs = []
     for lm in lms:
         lm_chin = lm[0: 17]  # left-right

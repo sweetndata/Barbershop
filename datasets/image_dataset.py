@@ -1,9 +1,12 @@
-from torch.utils.data import Dataset
-from PIL import Image
-import PIL
-from utils import data_utils
-import torchvision.transforms as transforms
 import os
+
+import PIL
+import torchvision.transforms as transforms
+from PIL import Image
+from torch.utils.data import Dataset
+
+from utils import data_utils
+
 
 class ImagesDataset(Dataset):
 
@@ -17,8 +20,8 @@ class ImagesDataset(Dataset):
             self.image_paths = image_path
 
         self.image_transform = transforms.Compose([
-                                    transforms.ToTensor(),
-                                    transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
+            transforms.ToTensor(),
+            transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
         self.opts = opts
 
     def __len__(self):
@@ -34,6 +37,3 @@ class ImagesDataset(Dataset):
             im_L = self.image_transform(im_L)
 
         return im_H, im_L, im_name
-
-
-

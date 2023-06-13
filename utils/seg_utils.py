@@ -1,7 +1,9 @@
-
-import numpy as np
 import os
+
 import PIL
+import numpy as np
+
+
 def vis_seg(pred):
     num_labels = 16
 
