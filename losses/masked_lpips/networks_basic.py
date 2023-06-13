@@ -1,18 +1,12 @@
 from __future__ import absolute_import
 
-import sys
 import torch
 import torch.nn as nn
-import torch.nn.init as init
 from torch.autograd import Variable
 from torch.nn import functional as F
-import numpy as np
-from pdb import set_trace as st
-from skimage import color
-from IPython import embed
-from . import pretrained_networks as pn
 
 from losses import masked_lpips as util
+from . import pretrained_networks as pn
 
 
 def spatial_average(in_tens, mask=None, keepdim=True):
@@ -40,15 +34,15 @@ def upsample(in_tens, out_H=64):  # assumes scale factor is same for H and W
 # Learned perceptual metric
 class PNetLin(nn.Module):
     def __init__(
-        self,
-        pnet_type="vgg",
-        pnet_rand=False,
-        pnet_tune=False,
-        use_dropout=True,
-        spatial=False,
-        version="0.1",
-        lpips=True,
-        vgg_blocks=[1, 2, 3, 4, 5]
+            self,
+            pnet_type="vgg",
+            pnet_rand=False,
+            pnet_tune=False,
+            use_dropout=True,
+            spatial=False,
+            version="0.1",
+            lpips=True,
+            vgg_blocks=[1, 2, 3, 4, 5]
     ):
         super(PNetLin, self).__init__()
 
@@ -83,7 +77,7 @@ class PNetLin(nn.Module):
             self.lin3 = NetLinLayer(self.chns[3], use_dropout=use_dropout)
             self.lin4 = NetLinLayer(self.chns[4], use_dropout=use_dropout)
             self.lins = [self.lin0, self.lin1, self.lin2, self.lin3, self.lin4]
-            #self.lins = [self.lin0, self.lin1, self.lin2, self.lin3, self.lin4]
+            # self.lins = [self.lin0, self.lin1, self.lin2, self.lin3, self.lin4]
             if self.pnet_type == "squeeze":  # 7 layers for squeezenet
                 self.lin5 = NetLinLayer(self.chns[5], use_dropout=use_dropout)
                 self.lin6 = NetLinLayer(self.chns[6], use_dropout=use_dropout)
@@ -100,7 +94,7 @@ class PNetLin(nn.Module):
         )
         outs0, outs1 = self.net.forward(in0_input), self.net.forward(in1_input)
         feats0, feats1, diffs = {}, {}, {}
-        
+
         # prepare list of masks at different resolutions
         if mask is not None:
             masks = []
@@ -126,7 +120,7 @@ class PNetLin(nn.Module):
                 util.normalize_tensor(outs1[kk]),
             )
             diffs[kk] = (feats0[kk] - feats1[kk]) ** 2
-        
+
         if self.lpips:
             if self.spatial:
                 res = [
@@ -169,13 +163,13 @@ class PNetLin(nn.Module):
                     spatial_average(diffs[kk].sum(dim=1, keepdim=True), keepdim=True)
                     for kk in range(self.L)
                 ]
-        
+
         '''
         val = res[0]
         for l in range(1, self.L):
             val += res[l]
         '''
-        
+
         val = 0.0
         for l in range(self.L):
             # l is going to run from 0 to 4

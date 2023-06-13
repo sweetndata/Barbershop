@@ -1,24 +1,17 @@
 from __future__ import absolute_import
 
-import sys
-import numpy as np
-import torch
-from torch import nn
 import os
 from collections import OrderedDict
-from torch.autograd import Variable
-import itertools
-from .base_model import BaseModel
+
+import numpy as np
+import torch
 from scipy.ndimage import zoom
-import fractions
-import functools
-import skimage.transform
+from torch.autograd import Variable
 from tqdm import tqdm
 
-from IPython import embed
-
-from . import networks_basic as netw
 from losses import masked_lpips as util
+from . import networks_basic as netw
+from .base_model import BaseModel
 
 
 class DistModel(BaseModel):
@@ -26,22 +19,22 @@ class DistModel(BaseModel):
         return self.model_name
 
     def initialize(
-        self,
-        model="net-lin",
-        net="alex",
-        vgg_blocks=[1, 2, 3, 4, 5],
-        colorspace="Lab",
-        pnet_rand=False,
-        pnet_tune=False,
-        model_path=None,
-        use_gpu=True,
-        printNet=False,
-        spatial=False,
-        is_train=False,
-        lr=0.0001,
-        beta1=0.5,
-        version="0.1",
-        gpu_ids=[0],
+            self,
+            model="net-lin",
+            net="alex",
+            vgg_blocks=[1, 2, 3, 4, 5],
+            colorspace="Lab",
+            pnet_rand=False,
+            pnet_tune=False,
+            model_path=None,
+            use_gpu=True,
+            printNet=False,
+            spatial=False,
+            is_train=False,
+            lr=0.0001,
+            beta1=0.5,
+            version="0.1",
+            gpu_ids=[0],
     ):
         """
         INPUTS
